@@ -99,7 +99,8 @@
                     </p>
                     <p class="text-xs text-gray-500 mt-2">
                         <i class="fa fa-info-circle mr-1"></i>智能替补：普通分类缺少的战队，自动用ESL/PGL版本替补显示 | 
-                        <i class="fa fa-download mr-1"></i>SVG自动转PNG下载
+                        <i class="fa fa-download mr-1"></i>SVG自动转PNG下载 | 
+                        <i class="fa fa-font mr-1"></i>大小写不敏感（spirit = SPIRIT）
                     </p>
                 </div>
             </div>
@@ -153,7 +154,7 @@
     <footer class="border-t border-gray-800 py-6 mt-12">
         <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
             <p>使用 GitHub Pages 托管 | LOGO 存储于 GitHub 仓库</p>
-            <p class="mt-1">✅ 支持 PNG / JPG / SVG 矢量图格式 | SVG自动转PNG下载</p>
+            <p class="mt-1">✅ 支持 PNG / JPG / SVG 矢量图格式 | SVG自动转PNG | 大小写不敏感</p>
             <p class="mt-2">
                 <a href="https://github.com" target="_blank" class="hover:text-white transition-colors">
                     <i class="fa fa-github mr-1"></i>GitHub
@@ -253,12 +254,18 @@
             return ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext);
         }
 
-        // 演示数据
+        // 演示数据 - 包含大小写测试
         function loadDemoData() {
             imageData = [
-                { url: "https://picsum.photos/1080/1080?random=1", title: "Copy of 9Z CHIP", category: "esl", isSvg: false },
-                { url: "https://picsum.photos/1080/1080?random=2", title: "9Z GLASS", category: "pgl", isSvg: false },
-                { url: "https://picsum.photos/1080/1080?random=3", title: "9Z", category: "normal", isSvg: true },
+                // spirit 大小写测试
+                { url: "https://picsum.photos/1080/1080?random=1", title: "Copy of spirit CHIP", category: "esl", isSvg: false },
+                { url: "https://picsum.photos/1080/1080?random=2", title: "SPIRIT GLASS", category: "pgl", isSvg: false },
+                { url: "https://picsum.photos/1080/1080?random=3", title: "Spirit", category: "normal", isSvg: true },
+                
+                // 9Z战队
+                { url: "https://picsum.photos/1080/1080?random=4", title: "Copy of 9Z CHIP", category: "esl", isSvg: false },
+                { url: "https://picsum.photos/1080/1080?random=5", title: "9Z GLASS", category: "pgl", isSvg: false },
+                { url: "https://picsum.photos/1080/1080?random=6", title: "9z", category: "normal", isSvg: false },
             ];
             updateCounts();
             initDefaultCategory();
@@ -297,16 +304,50 @@
         function updateCounts() {
             document.getElementById('esl-count').textContent = imageData.filter(img => img.category === 'esl').length;
             document.getElementById('pgl-count').textContent = imageData.filter(img => img.category === 'pgl').length;
-            const allTeams = [...new Set(imageData.map(img => extractTeamName(img.title)))];
+            
+            // 使用小写key去重统计
+            const allTeams = [...new Set(imageData.map(img => getTeamKey(img.title)))];
             document.getElementById('normal-count').textContent = allTeams.length;
         }
 
-        // 获取普通分类显示的图片（含替补逻辑）
+        // ==================== 大小写不敏感处理 ====================
+        
+        // 获取战队唯一KEY（转小写，用于比较）
+        function getTeamKey(title) {
+            return extractTeamName(title).toLowerCase();
+        }
+
+        // 提取战队名称（通用命名规则，保留原始大小写用于显示）
+        function extractTeamName(title) {
+            return title
+                .replace(/^Copy of /i, '')
+                .replace(/\s*(CHIP|_CHIP|方块|ESL)$/i, '')
+                .replace(/\s*(GLASS|_GLASS|玻璃|PGL)$/i, '')
+                .replace(/\s*(normal|普通)$/i, '')
+                .replace(/[_-]+$/, '')
+                .trim();
+        }
+
+        // 获取战队的所有版本（大小写不敏感）
+        function getTeamVersions(teamName) {
+            const targetKey = getTeamKey(teamName);
+            return imageData.filter(img => getTeamKey(img.title) === targetKey);
+        }
+
+        // 获取普通分类显示的图片（含替补逻辑，大小写不敏感）
         function getNormalDisplayImages() {
-            const allTeamNames = [...new Set(imageData.map(img => extractTeamName(img.title)))];
+            // 1. 使用小写KEY收集所有唯一战队
+            const teamMap = new Map();
+            imageData.forEach(img => {
+                const key = getTeamKey(img.title);
+                if (!teamMap.has(key)) {
+                    teamMap.set(key, extractTeamName(img.title));
+                }
+            });
             
-            return allTeamNames.map(teamName => {
-                const versions = getTeamVersions(teamName);
+            // 2. 对每个战队，优先选normal版本，没有就选esl，再没有选pgl
+            return Array.from(teamMap.entries()).map(([key, displayName]) => {
+                const versions = imageData.filter(img => getTeamKey(img.title) === key);
                 const normalVersion = versions.find(v => v.category === 'normal');
                 const eslVersion = versions.find(v => v.category === 'esl');
                 const pglVersion = versions.find(v => v.category === 'pgl');
@@ -315,10 +356,33 @@
                 
                 return {
                     ...displayVersion,
+                    title: displayName,  // 使用第一个遇到的名称作为显示名
                     isFallback: !normalVersion,
                     fallbackSource: normalVersion ? null : (eslVersion ? 'esl' : 'pgl')
                 };
             });
+        }
+
+        // ==================== 渲染和交互 ====================
+
+        // 获取版本显示名称
+        function getVersionLabel(category) {
+            const labels = {
+                esl: 'ESL方块',
+                pgl: 'PGL玻璃',
+                normal: '普通'
+            };
+            return labels[category] || category;
+        }
+
+        // 获取分类徽章样式
+        function getCategoryBadgeClass(category) {
+            const classes = {
+                esl: 'bg-esl/30 text-esl',
+                pgl: 'bg-pgl/30 text-pgl',
+                normal: 'bg-normal/30 text-normal'
+            };
+            return classes[category] || 'bg-gray-500/30 text-gray-300';
         }
 
         // 渲染LOGO画廊
@@ -379,16 +443,6 @@
             `).join('');
         }
 
-        // 获取分类徽章样式
-        function getCategoryBadgeClass(category) {
-            const classes = {
-                esl: 'bg-esl/30 text-esl',
-                pgl: 'bg-pgl/30 text-pgl',
-                normal: 'bg-normal/30 text-normal'
-            };
-            return classes[category] || 'bg-gray-500/30 text-gray-300';
-        }
-
         // 分类筛选
         function filterCategory(category) {
             currentCategory = category;
@@ -413,32 +467,6 @@
         // 初始化默认选中普通分类
         function initDefaultCategory() {
             filterCategory('normal');
-        }
-
-        // 提取战队名称（通用命名规则）
-        function extractTeamName(title) {
-            return title
-                .replace(/^Copy of /i, '')
-                .replace(/\s*(CHIP|_CHIP|方块|ESL)$/i, '')
-                .replace(/\s*(GLASS|_GLASS|玻璃|PGL)$/i, '')
-                .replace(/\s*(normal|普通)$/i, '')
-                .replace(/[_-]+$/, '')
-                .trim();
-        }
-
-        // 获取战队的所有版本
-        function getTeamVersions(teamName) {
-            return imageData.filter(img => extractTeamName(img.title) === teamName);
-        }
-
-        // 获取版本显示名称
-        function getVersionLabel(category) {
-            const labels = {
-                esl: 'ESL方块',
-                pgl: 'PGL玻璃',
-                normal: '普通'
-            };
-            return labels[category] || category;
         }
 
         // 打开战队多版本预览
@@ -483,40 +511,32 @@
         // ==================== SVG 转 PNG 下载功能 ====================
         async function downloadImage(url, title, isSvg) {
             if (isSvg) {
-                // SVG 自动转 PNG 下载
                 await downloadSvgAsPng(url, title);
             } else {
-                // 普通图片直接下载
                 downloadSingleImage(url, title);
             }
         }
 
-        // SVG 转 PNG 下载
         async function downloadSvgAsPng(svgUrl, title) {
             try {
-                // 1. 加载SVG文件
                 const response = await fetch(svgUrl);
                 const svgText = await response.text();
                 
-                // 2. 创建Image对象加载SVG
                 const img = new Image();
                 const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
                 const url = URL.createObjectURL(svgBlob);
                 
                 img.onload = function() {
-                    // 3. 创建Canvas，设置1080x1080高清尺寸
                     const canvas = document.createElement('canvas');
                     canvas.width = 1080;
                     canvas.height = 1080;
                     const ctx = canvas.getContext('2d');
                     
-                    // 4. 绘制SVG到Canvas（居中缩放）
                     const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
                     const x = (canvas.width - img.width * scale) / 2;
                     const y = (canvas.height - img.height * scale) / 2;
                     ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
                     
-                    // 5. 转成PNG下载
                     canvas.toBlob(function(blob) {
                         const link = document.createElement('a');
                         link.href = URL.createObjectURL(blob);
@@ -531,12 +551,10 @@
                 img.src = url;
             } catch (error) {
                 console.error('SVG转PNG失败，直接下载:', error);
-                // 失败时直接下载原SVG文件
                 downloadSingleImage(svgUrl, title);
             }
         }
 
-        // 普通图片下载
         function downloadSingleImage(url, title) {
             const link = document.createElement('a');
             link.href = url;
