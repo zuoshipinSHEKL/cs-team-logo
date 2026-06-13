@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>赛事图片展示库</title>
+    <title>CS队伍LOGO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
@@ -129,15 +129,20 @@
         </div>
     </main>
 
-    <!-- 图片预览模态框 -->
-    <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90">
-        <button onclick="closeModal()" class="absolute top-4 right-4 text-white text-3xl hover:text-gray-300 z-10">
+    <!-- 战队多版本预览模态框 -->
+    <div id="modal" class="fixed inset-0 z-50 hidden bg-black/95 overflow-y-auto">
+        <button onclick="closeModal()" class="fixed top-4 right-4 text-white text-3xl hover:text-gray-300 z-20">
             <i class="fa fa-times"></i>
         </button>
-        <button onclick="downloadImage()" class="absolute top-4 left-4 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-all z-10">
-            <i class="fa fa-download mr-2"></i>下载原图
-        </button>
-        <img id="modal-image" src="" alt="预览图" class="max-w-[90vw] max-h-[90vh] object-contain">
+        
+        <div class="container mx-auto px-4 py-12">
+            <h2 id="modal-team-name" class="text-2xl font-bold text-white text-center mb-8"></h2>
+            
+            <!-- 战队所有版本 -->
+            <div id="modal-versions" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <!-- 版本卡片将动态生成 -->
+            </div>
+        </div>
     </div>
 
     <!-- 页脚 -->
@@ -157,8 +162,8 @@
         // ==================== GitHub 自动同步配置 ====================
         // 只需要修改这里的配置，上传图片到对应文件夹即可自动同步
         const GITHUB_CONFIG = {
-            username: "你的GitHub用户名",           // 例如: "tom"
-            repo: "你的仓库名",                      // 例如: "csgo-logos"
+            username: "zuoshipinSHEKL",           // 例如: "tom"
+            repo: "cs-team-logo",                      // 例如: "csgo-logos"
             branch: "main",                         // 分支: main 或 master
             basePath: "logos"                       // LOGO存放的根文件夹名
         };
@@ -170,9 +175,10 @@
         // ============================================================
 
         let imageData = [];
-        let currentCategory = 'all';
+        let currentCategory = 'normal';  // 默认只展示普通版本
         let currentImageUrl = '';
         let isLoading = false;
+        let currentTeamName = '';
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -221,7 +227,7 @@
 
                 imageData = allImages;
                 updateCounts();
-                renderGallery();
+                initDefaultCategory();
             } catch (error) {
                 console.error("GitHub API 加载失败:", error);
                 loadDemoData();
@@ -237,22 +243,25 @@
             return ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext);
         }
 
-        // 演示数据
+        // 演示数据 - 模拟同战队多版本
         function loadDemoData() {
             imageData = [
-                { url: "https://picsum.photos/1080/1080?random=1", title: "FaZe Clan", category: "esl" },
-                { url: "https://picsum.photos/1080/1080?random=2", title: "Natus Vincere", category: "esl" },
-                { url: "https://picsum.photos/1080/1080?random=3", title: "Team Vitality", category: "esl" },
-                { url: "https://picsum.photos/1080/1080?random=4", title: "G2 Esports", category: "pgl" },
-                { url: "https://upload.wikimedia.org/wikipedia/commons/9/95/Font_Awesome_5_brands_steam.svg", title: "Team Spirit SVG", category: "pgl" },
-                { url: "https://picsum.photos/1080/1080?random=6", title: "Heroic", category: "pgl" },
-                { url: "https://picsum.photos/1080/1080?random=7", title: "Cloud9", category: "pgl" },
-                { url: "https://picsum.photos/1080/1080?random=8", title: "Astralis", category: "normal" },
-                { url: "https://picsum.photos/1080/1080?random=9", title: "ENCE", category: "normal" },
-                { url: "https://picsum.photos/1080/1080?random=10", title: "MOUZ", category: "normal" },
+                // 同一战队的三个版本
+                { url: "https://picsum.photos/1080/1080?random=1", title: "FaZe Clan_esl", category: "esl" },
+                { url: "https://picsum.photos/1080/1080?random=2", title: "FaZe Clan_pgl", category: "pgl" },
+                { url: "https://picsum.photos/1080/1080?random=3", title: "FaZe Clan_normal", category: "normal" },
+                
+                { url: "https://picsum.photos/1080/1080?random=4", title: "G2 Esports_esl", category: "esl" },
+                { url: "https://picsum.photos/1080/1080?random=5", title: "G2 Esports_pgl", category: "pgl" },
+                { url: "https://picsum.photos/1080/1080?random=6", title: "G2 Esports_normal", category: "normal" },
+                
+                { url: "https://picsum.photos/1080/1080?random=7", title: "Team Liquid_normal", category: "normal" },
+                { url: "https://picsum.photos/1080/1080?random=8", title: "Astralis_normal", category: "normal" },
+                { url: "https://picsum.photos/1080/1080?random=9", title: "ENCE_normal", category: "normal" },
+                { url: "https://picsum.photos/1080/1080?random=10", title: "MOUZ_normal", category: "normal" },
             ];
             updateCounts();
-            renderGallery();
+            initDefaultCategory();
         }
 
         // 显示配置提示
@@ -310,7 +319,7 @@
             
             container.innerHTML = filteredImages.map((img, index) => `
                 <div class="logo-item gallery-item" data-category="${img.category}">
-                    <div class="group relative rounded-xl overflow-hidden bg-gray-800 cursor-pointer transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-${img.category}/20 h-full flex flex-col" onclick="openModal('${img.url}')">
+                    <div class="group relative rounded-xl overflow-hidden bg-gray-800 cursor-pointer transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-${img.category}/20 h-full flex flex-col" onclick="openModal('${img.title}')">
                         <div class="flex-1 flex items-center justify-center p-4 bg-gray-800/50">
                             <img 
                                 src="${img.thumbnail || img.url}" 
@@ -324,10 +333,10 @@
                             </div>
                         </div>
                         <div class="p-3 bg-gray-800 border-t border-gray-700">
-                            <h3 class="font-semibold text-white text-sm text-center truncate">${img.title}</h3>
+                            <h3 class="font-semibold text-white text-sm text-center truncate">${extractTeamName(img.title)}</h3>
                             <div class="flex items-center justify-center mt-2 gap-2">
                                 <span class="px-2 py-0.5 rounded text-xs font-medium ${getCategoryBadgeClass(img.category)}">
-                                    ${img.category.toUpperCase()}
+                                    ${getVersionLabel(img.category)}
                                 </span>
                                 ${img.url.endsWith('.svg') ? '<span class="px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/30 text-yellow-400">SVG</span>' : ''}
                             </div>
@@ -375,38 +384,76 @@
             renderGallery();
         }
 
-        // 打开预览模态框
-        function openModal(url) {
-            currentImageUrl = url;
-            document.getElementById('modal-image').src = url;
+        // 初始化默认选中普通分类
+        function initDefaultCategory() {
+            filterCategory('normal');
+        }
+
+        // 提取战队名称（去掉版本后缀）
+        function extractTeamName(title) {
+            return title.replace(/_(esl|pgl|normal|方块|玻璃)$/i, '').trim();
+        }
+
+        // 获取战队的所有版本
+        function getTeamVersions(teamName) {
+            return imageData.filter(img => extractTeamName(img.title) === teamName);
+        }
+
+        // 获取版本显示名称
+        function getVersionLabel(category) {
+            const labels = {
+                esl: 'ESL方块',
+                pgl: 'PGL玻璃',
+                normal: '普通'
+            };
+            return labels[category] || category;
+        }
+
+        // 打开战队多版本预览
+        function openModal(title) {
+            const teamName = extractTeamName(title);
+            currentTeamName = teamName;
+            const versions = getTeamVersions(teamName);
+            
+            document.getElementById('modal-team-name').textContent = teamName;
+            
+            const versionsContainer = document.getElementById('modal-versions');
+            versionsContainer.innerHTML = versions.map(img => `
+                <div class="bg-gray-800 rounded-xl overflow-hidden">
+                    <div class="aspect-square flex items-center justify-center p-6 bg-gray-900">
+                        <img src="${img.url}" alt="${img.title}" class="max-w-full max-h-full object-contain">
+                    </div>
+                    <div class="p-4 text-center">
+                        <span class="inline-block px-3 py-1 rounded-full text-sm font-medium mb-2 ${getCategoryBadgeClass(img.category)}">
+                            ${getVersionLabel(img.category)}
+                        </span>
+                        ${img.url.endsWith('.svg') ? '<span class="inline-block px-2 py-1 rounded text-xs font-medium bg-yellow-500/30 text-yellow-400 ml-1">SVG</span>' : ''}
+                        <button 
+                            onclick="downloadSingleImage('${img.url}', '${img.title}')"
+                            class="block w-full mt-3 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all text-sm"
+                        >
+                            <i class="fa fa-download mr-2"></i>下载
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
             document.getElementById('modal').classList.remove('hidden');
-            document.getElementById('modal').classList.add('flex');
             document.body.style.overflow = 'hidden';
         }
 
         // 关闭模态框
         function closeModal() {
             document.getElementById('modal').classList.add('hidden');
-            document.getElementById('modal').classList.remove('flex');
             document.body.style.overflow = '';
-        }
-
-        // 下载图片（模态框）
-        function downloadImage() {
-            const link = document.createElement('a');
-            link.href = currentImageUrl;
-            link.download = currentImageUrl.split('/').pop() || 'image.jpg';
-            link.target = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
         // 单张图片下载
         function downloadSingleImage(url, title) {
             const link = document.createElement('a');
             link.href = url;
-            link.download = title.replace(/\s+/g, '_') + '.jpg';
+            const ext = url.split('.').pop() || 'png';
+            link.download = title.replace(/\s+/g, '_') + '.' + ext;
             link.target = '_blank';
             document.body.appendChild(link);
             link.click();
