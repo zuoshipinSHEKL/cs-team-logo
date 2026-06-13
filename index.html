@@ -69,13 +69,13 @@
                     <i class="fa fa-th mr-1"></i>全部
                 </button>
                 <button onclick="filterCategory('esl')" id="btn-esl" class="tab-btn px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-gray-700 hover:bg-esl/20 hover:text-esl">
-                    <i class="fa fa-trophy mr-1"></i>ESL
+                    <i class="fa fa-cube mr-1"></i>ESL方块
                 </button>
                 <button onclick="filterCategory('pgl')" id="btn-pgl" class="tab-btn px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-gray-700 hover:bg-pgl/20 hover:text-pgl">
-                    <i class="fa fa-gamepad mr-1"></i>PGL
+                    <i class="fa fa-square-o mr-1"></i>PGL玻璃
                 </button>
                 <button onclick="filterCategory('normal')" id="btn-normal" class="tab-btn px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-gray-700 hover:bg-normal/20 hover:text-normal">
-                    <i class="fa fa-camera mr-1"></i>正常
+                    <i class="fa fa-circle-o mr-1"></i>普通
                 </button>
             </div>
         </div>
@@ -92,9 +92,9 @@
                 <div>
                     <h3 class="font-semibold text-white mb-1">GitHub 自动同步已启用</h3>
                     <p class="text-sm text-gray-400">
-                        只需将 LOGO 图片上传到仓库的 <code class="bg-gray-700 px-2 py-0.5 rounded text-green-300">logos/esl/</code>、
-                        <code class="bg-gray-700 px-2 py-0.5 rounded text-green-300">logos/pgl/</code>、
-                        <code class="bg-gray-700 px-2 py-0.5 rounded text-green-300">logos/normal/</code> 文件夹中，
+                        只需将 LOGO 图片上传到仓库的 <code class="bg-gray-700 px-2 py-0.5 rounded text-esl">logos/esl/</code>（ESL方块）、
+                        <code class="bg-gray-700 px-2 py-0.5 rounded text-pgl">logos/pgl/</code>（PGL玻璃）、
+                        <code class="bg-gray-700 px-2 py-0.5 rounded text-normal">logos/normal/</code>（普通）文件夹中，
                         网页会<strong class="text-green-400">自动读取并分类显示</strong>，无需修改代码！
                     </p>
                 </div>
@@ -105,15 +105,15 @@
         <div class="grid grid-cols-3 gap-4 mb-8">
             <div class="bg-esl/10 border border-esl/30 rounded-xl p-4 text-center">
                 <div class="text-3xl font-bold text-esl" id="esl-count">0</div>
-                <div class="text-sm text-gray-400">ESL 战队</div>
+                <div class="text-sm text-gray-400">ESL方块</div>
             </div>
             <div class="bg-pgl/10 border border-pgl/30 rounded-xl p-4 text-center">
                 <div class="text-3xl font-bold text-pgl" id="pgl-count">0</div>
-                <div class="text-sm text-gray-400">PGL 战队</div>
+                <div class="text-sm text-gray-400">PGL玻璃</div>
             </div>
             <div class="bg-normal/10 border border-normal/30 rounded-xl p-4 text-center">
                 <div class="text-3xl font-bold text-normal" id="normal-count">0</div>
-                <div class="text-sm text-gray-400">其他战队</div>
+                <div class="text-sm text-gray-400">普通</div>
             </div>
         </div>
 
