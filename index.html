@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS队伍LOGO</title>
+    <title>赛事图片展示库</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
@@ -162,16 +162,17 @@
         // ==================== GitHub 自动同步配置 ====================
         // 只需要修改这里的配置，上传图片到对应文件夹即可自动同步
         const GITHUB_CONFIG = {
-            username: "zuoshipinSHEKL",           // 例如: "tom"
-            repo: "cs-team-logo",                      // 例如: "csgo-logos"
+            username: "你的GitHub用户名",           // 例如: "tom"
+            repo: "你的仓库名",                      // 例如: "csgo-logos"
             branch: "main",                         // 分支: main 或 master
             basePath: "logos"                       // LOGO存放的根文件夹名
         };
-        // 文件夹结构（在仓库中创建）:
-        // logos/
-        //   ├── esl/       (放ESL赛事战队LOGO)
-        //   ├── pgl/       (放PGL赛事战队LOGO)
-        //   └── normal/    (放其他赛事战队LOGO)
+        // 文件夹映射（支持中文文件夹名）:
+        const FOLDER_MAP = {
+            esl: ["esl", "ESL方块", "ESL"],        // ESL方块 文件夹
+            pgl: ["pgl", "PGL玻璃", "PGL"],        // PGL玻璃 文件夹
+            normal: ["normal", "普通", "Normal"]   // 普通 文件夹
+        };
         // ============================================================
 
         let imageData = [];
@@ -185,7 +186,7 @@
             loadImagesFromGitHub();
         });
 
-        // 从 GitHub API 自动加载图片
+        // 从 GitHub API 自动加载图片（支持中文文件夹名）
         async function loadImagesFromGitHub() {
             if (GITHUB_CONFIG.username === "你的GitHub用户名") {
                 // 演示模式 - 使用示例数据
@@ -202,26 +203,35 @@
                 const allImages = [];
 
                 for (const category of categories) {
-                    const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.basePath}/${category}?ref=${GITHUB_CONFIG.branch}`;
+                    // 尝试该分类下所有可能的文件夹名（支持中文）
+                    const folderNames = FOLDER_MAP[category];
                     
-                    try {
-                        const response = await fetch(apiUrl);
-                        if (!response.ok) continue;
+                    for (const folderName of folderNames) {
+                        const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.basePath}/${folderName}?ref=${GITHUB_CONFIG.branch}`;
                         
-                        const files = await response.json();
-                        
-                        for (const file of files) {
-                            if (isImageFile(file.name)) {
-                                allImages.push({
-                                    url: file.download_url,
-                                    title: file.name.replace(/\.[^/.]+$/, "").replace(/_/g, " "),
-                                    category: category,
-                                    rawUrl: file.download_url
-                                });
+                        try {
+                            const response = await fetch(apiUrl);
+                            if (!response.ok) continue;
+                            
+                            const files = await response.json();
+                            
+                            for (const file of files) {
+                                if (isImageFile(file.name)) {
+                                    allImages.push({
+                                        url: file.download_url,
+                                        title: file.name.replace(/\.[^/.]+$/, "").replace(/_/g, " "),
+                                        category: category,
+                                        rawUrl: file.download_url
+                                    });
+                                }
                             }
+                            
+                            // 找到一个文件夹就够了
+                            if (files.length > 0) break;
+                        } catch (e) {
+                            // 这个文件夹不存在，试下一个
+                            continue;
                         }
-                    } catch (e) {
-                        console.log(`文件夹 ${category} 不存在或加载失败`);
                     }
                 }
 
